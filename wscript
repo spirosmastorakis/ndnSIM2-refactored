@@ -6,7 +6,7 @@ from waflib.Errors import WafError
 
 import wutils
 
-REQUIRED_BOOST_LIBS = ['graph', 'unit_test_framework']
+REQUIRED_BOOST_LIBS = ['graph', 'thread', 'unit_test_framework']
 
 def required_boost_libs(conf):
     conf.env.REQUIRED_BOOST_LIBS += REQUIRED_BOOST_LIBS
@@ -95,10 +95,22 @@ def build(bld):
         bld.env['MODULES_NOT_BUILT'].append('ndnSIM')
         return
 
-    module_dirs = ['NFD', 'apps', 'helper', 'model', 'utils']
+    module_dirs = ['NFD/core', 'NFD/daemon', 'apps', 'helper', 'model', 'utils']
 
     module.source = bld.path.ant_glob(['%s/**/*.cpp' % dir for dir in module_dirs],
-                                      excl=['model/ip-faces/*'])
+                                      excl=['model/ip-faces/*',
+                                            'NFD/core/global-io.cpp',
+                                            'NFD/core/logger-factory.cpp',
+                                            'NFD/core/logger.cpp',
+                                            'NFD/core/network-interface.cpp',
+                                            'NFD/daemon/main.cpp',
+                                            'NFD/daemon/nfd.*',
+                                            'NFD/daemon/face/ethernet*',
+                                            'NFD/daemon/face/multicast-udp*',
+                                            'NFD/daemon/face/tcp*',
+                                            'NFD/daemon/face/udp*',
+                                            'NFD/daemon/face/unix-stream*',
+                                            'NFD/daemon/face/websocket*'])
 
     module.full_headers = [p.path_from(bld.path) for p in bld.path.ant_glob(
         ['%s/**/*.hpp' % dir for dir in module_dirs])]
