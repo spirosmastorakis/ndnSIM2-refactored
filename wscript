@@ -6,19 +6,18 @@ from waflib.Errors import WafError
 
 import wutils
 
-REQUIRED_BOOST_LIBS = ['graph', 'thread', 'unit_test_framework']
+REQUIRED_BOOST_LIBS = ['graph', 'thread', 'unit_test_framework',
+                       'system', 'random', 'date_time', 'iostreams', 'regex', 'program_options', 'chrono', 'filesystem']
 
 def required_boost_libs(conf):
     conf.env.REQUIRED_BOOST_LIBS += REQUIRED_BOOST_LIBS
 
 def options(opt):
-    opt.load(['dependency-checker',
-              'doxygen', 'sphinx_build', 'type_traits', 'compiler-features'],
-             tooldir=['%s/.waf-tools' % opt.path.abspath()])
+    opt.load(['doxygen', 'sphinx_build', 'type_traits', 'compiler-features', 'cryptopp', 'sqlite3'],
+             tooldir=['%s/ndn-cxx/.waf-tools' % opt.path.abspath()])
 
 def configure(conf):
-    conf.load(['dependency-checker',
-               'doxygen', 'sphinx_build', 'type_traits', 'compiler-features'])
+    conf.load(['doxygen', 'sphinx_build', 'type_traits', 'compiler-features', 'cryptopp', 'sqlite3'])
 
     conf.env['ENABLE_NDNSIM']=False
 
@@ -28,8 +27,10 @@ def configure(conf):
             '/usr/local/lib64/pkgconfig',
             '/usr/local/lib32/pkgconfig',
             '/opt/local/lib/pkgconfig'])
-    conf.check_cfg(package='libndn-cxx', args=['--cflags', '--libs'],
-                   uselib_store='NDN_CXX', mandatory=True)
+
+    conf.check_cxx(lib='pthread', uselib_store='PTHREAD', define_name='HAVE_PTHREAD', mandatory=False)
+    conf.check_sqlite3(mandatory=True)
+    conf.check_cryptopp(mandatory=True, use='PTHREAD')
 
     if not conf.env['LIB_BOOST']:
         conf.report_optional_feature("ndnSIM", "ndnSIM", False,
@@ -72,6 +73,8 @@ def configure(conf):
 
     conf.report_optional_feature("ndnSIM", "ndnSIM", True, "")
 
+    conf.write_config_header('../../../src/ndnSIM/ndn-cxx/ndn-cxx/ndn-cxx-config.hpp', define_prefix='NDN_CXX_', remove=False)
+
 def build(bld):
     deps = ['core', 'network', 'point-to-point', 'topology-read', 'mobility', 'internet']
     if 'ns3-visualizer' in bld.env['NS3_ENABLED_MODULES']:
@@ -83,9 +86,9 @@ def build(bld):
     module = bld.create_ns3_module ('ndnSIM', deps)
     module.module = 'ndnSIM'
     module.features += ' ns3fullmoduleheaders'
-    module.use += ['NDN_CXX', 'BOOST']
-    module.includes = [".", "./NFD", "./NFD/daemon", "./NFD/core"]
-    module.export_includes = [".", "./NFD", "./NFD/daemon", "./NFD/core"]
+    module.use += ['BOOST', 'CRYPTOPP', 'SQLITE3', 'RT', 'PTHREAD']
+    module.includes = [".", "./NFD", "./NFD/daemon", "./NFD/core", "./ndn-cxx", "./ndn-cxx/ndn-cxx"]
+    module.export_includes = [".", "./NFD", "./NFD/daemon", "./NFD/core", "./ndn-cxx"]
 
     headers = bld (features='ns3header')
     headers.module = 'ndnSIM'
@@ -95,7 +98,7 @@ def build(bld):
         bld.env['MODULES_NOT_BUILT'].append('ndnSIM')
         return
 
-    module_dirs = ['NFD/core', 'NFD/daemon', 'apps', 'helper', 'model', 'utils']
+    module_dirs = ['NFD/core', 'NFD/daemon', 'ndn-cxx/ndn-cxx', 'apps', 'helper', 'model', 'utils']
 
     module.source = bld.path.ant_glob(['%s/**/*.cpp' % dir for dir in module_dirs],
                                       excl=['model/ip-faces/*',
@@ -110,7 +113,8 @@ def build(bld):
                                             'NFD/daemon/face/tcp*',
                                             'NFD/daemon/face/udp*',
                                             'NFD/daemon/face/unix-stream*',
-                                            'NFD/daemon/face/websocket*'])
+                                            'NFD/daemon/face/websocket*',
+                                            'ndn-cxx/**/*-osx.cpp'])
 
     module.full_headers = [p.path_from(bld.path) for p in bld.path.ant_glob(
         ['%s/**/*.hpp' % dir for dir in module_dirs])]
