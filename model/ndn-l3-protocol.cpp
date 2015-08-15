@@ -44,6 +44,8 @@
 #include "ns3/ndnSIM/NFD/daemon/mgmt/face-manager.hpp"
 #include "ns3/ndnSIM/NFD/daemon/mgmt/strategy-choice-manager.hpp"
 #include "ns3/ndnSIM/NFD/daemon/mgmt/status-server.hpp"
+#include "ns3/ndnSIM/NFD/rib/rib-manager.hpp"
+#include "ns3/ndnSIM/NFD/rib/nrd.hpp"
 
 #include "ns3/ndnSIM/NFD/daemon/face/null-face.hpp"
 #include "ns3/ndnSIM/NFD/core/config-file.hpp"
@@ -57,6 +59,8 @@ namespace ndn {
 
 const uint16_t L3Protocol::ETHERNET_FRAME_TYPE = 0x7777;
 const uint16_t L3Protocol::IP_STACK_PORT = 9695;
+
+static const std::string INTERNAL_CONFIG = "internal://nfd.conf";
 
 NS_OBJECT_ENSURE_REGISTERED(L3Protocol);
 
@@ -155,6 +159,8 @@ private:
   shared_ptr<nfd::FaceManager> m_faceManager;
   shared_ptr<nfd::StrategyChoiceManager> m_strategyChoiceManager;
   shared_ptr<nfd::StatusServer> m_statusServer;
+  shared_ptr<nfd::rib::RibManager> m_ribManager;
+  shared_ptr<::ndn::Face> m_Face;
 
   nfd::ConfigSection m_config;
 
@@ -178,6 +184,7 @@ L3Protocol::initialize()
   m_impl->m_forwarder = make_shared<nfd::Forwarder>();
 
   initializeManagement();
+  // Simulator::ScheduleWithContext(m_node->GetId(), Seconds(0), &L3Protocol::initializeRib, this);
 
   m_impl->m_forwarder->getFaceTable().addReserved(make_shared<nfd::NullFace>(), nfd::FACEID_NULL);
 
@@ -232,6 +239,14 @@ L3Protocol::initializeManagement()
                                                      ref(*forwarder),
                                                      keyChain);
 
+  // m_impl->m_Face = make_shared<::ndn::Face>();
+
+  // m_impl->m_ribManager = make_shared<rib::RibManager>(*(m_impl->m_Face), keyChain);
+
+  // m_impl->m_ribManager->registerWithNfd();
+
+  // m_impl->m_ribManager->enableLocalControlHeader();
+
   ConfigFile config((IgnoreSections({"general", "log", "rib"})));
 
   TablesConfigSection tablesConfig(forwarder->getCs(),
@@ -255,6 +270,48 @@ L3Protocol::initializeManagement()
   // add FIB entry for NFD Management Protocol
   shared_ptr<fib::Entry> entry = forwarder->getFib().insert("/localhost/nfd").first;
   entry->addNextHop(m_impl->m_internalFace, 0);
+}
+
+void
+L3Protocol::initializeRibManager()
+{
+  auto keyChain = std::ref(StackHelper::getKeyChain());
+  using namespace nfd;
+
+  m_impl->m_Face = make_shared<::ndn::Face>();
+
+  m_impl->m_ribManager = make_shared<rib::RibManager>(*(m_impl->m_Face), keyChain);
+
+  this->addFace(m_impl->m_Face);
+
+  ConfigFile config([] (const std::string& filename, const std::string& sectionName,
+                        const ConfigSection& section, bool isDryRun) {
+      // Ignore "log" and sections belonging to NFD,
+      // but raise an error if we're missing a handler for a "rib" section.
+      if (sectionName != "rib" || sectionName == "log") {
+        // do nothing
+      }
+      else {
+        // missing NRD section
+        ConfigFile::throwErrorOnUnknownSection(filename, sectionName, section, isDryRun);
+      }
+    });
+
+  m_impl->m_ribManager->setConfigFile(config);
+
+  // parse config file
+  if (!m_impl->m_config.empty()) {
+    config.parse(m_impl->m_config, true, "ndnSIM.conf");
+    config.parse(m_impl->m_config, false, "ndnSIM.conf");
+  }
+  else {
+    config.parse(m_impl->m_config, true, INTERNAL_CONFIG);
+    config.parse(m_impl->m_config, false, INTERNAL_CONFIG);
+  }
+
+  m_impl->m_ribManager->registerWithNfd();
+
+  m_impl->m_ribManager->enableLocalControlHeader();
 }
 
 shared_ptr<nfd::Forwarder>
