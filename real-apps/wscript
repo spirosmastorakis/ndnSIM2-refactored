@@ -1,0 +1,28 @@
+# -*- Mode: python; py-indent-offset: 4; indent-tabs-mode: nil; coding: utf-8; -*-
+
+top = '..'
+
+def build(bld):
+    # This may be necessary for visualizer to work
+    all_modules = [mod[len("ns3-"):] for mod in bld.env['NS3_ENABLED_MODULES']]
+
+    # List all .cpp files (whole example should be in one .cpp)
+    for i in bld.path.ant_glob(['*.cpp']):
+        name = str(i)[:-len(".cpp")]
+        bld.create_ns3_program(name, all_modules)
+        bld.features = ['cxx', 'cxxprogram']
+        bld.target = name
+        bld.source = [i] + bld.path.ant_glob(['%s/**/*.cpp' % name])
+        bld.use = 'ndn-cxx'
+        bld.install_path = None,
+        bld.includes = ['#', '.', '../NFD/', "../NFD/daemon", "../NFD/core", "../helper", "../model", "../utils", "../examples", "../apps"]
+
+    # List all directories files (example can has multiple .cpp in the directory)
+    for name in bld.path.ant_glob(['*'], dir = True, src = False):
+        bld.create_ns3_program(name, all_modules)
+        bld.features = ['cxx', 'cxxprogram']
+        bld.target = "%s/%s" % (name, name)
+        bld.source = bld.path.ant_glob(['%s/**/*.cpp' % name])
+        bld.use = 'ndn-cxx'
+        bld.install_path = None,
+        bld.includes = ['%s' % name, '#', '.', '../NFD/', "../NFD/daemon", "../NFD/core", "../helper", "../model", "../utils", "../examples", "../apps"]

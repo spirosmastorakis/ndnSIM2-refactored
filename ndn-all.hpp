@@ -22,6 +22,7 @@
 
 #include "ns3/ndnSIM/helper/ndn-stack-helper.hpp"
 #include "ns3/ndnSIM/helper/ndn-app-helper.hpp"
+#include "ns3/ndnSIM/helper/ndn-real-app-helper.hpp"
 #include "ns3/ndnSIM/helper/ndn-global-routing-helper.hpp"
 // #include "ns3/ndnSIM/helper/ndn-ip-faces-helper.hpp"
 // #include "ns3/ndnSIM/helper/ndn-link-control-helper.hpp"
