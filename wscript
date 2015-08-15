@@ -87,8 +87,8 @@ def build(bld):
     module.module = 'ndnSIM'
     module.features += ' ns3fullmoduleheaders'
     module.use += ['BOOST', 'CRYPTOPP', 'SQLITE3', 'RT', 'PTHREAD']
-    module.includes = [".", "./NFD", "./NFD/daemon", "./NFD/core", "./ndn-cxx", "./ndn-cxx/ndn-cxx"]
-    module.export_includes = [".", "./NFD", "./NFD/daemon", "./NFD/core", "./ndn-cxx"]
+    module.includes = [".", "./NFD", "./NFD/daemon", "./NFD/core", "./NFD/rib", "./ndn-cxx", "./ndn-cxx/ndn-cxx"]
+    module.export_includes = [".", "./NFD", "./NFD/daemon", "./NFD/rib", "./NFD/core", "./ndn-cxx"]
 
     headers = bld (features='ns3header')
     headers.module = 'ndnSIM'
@@ -98,7 +98,7 @@ def build(bld):
         bld.env['MODULES_NOT_BUILT'].append('ndnSIM')
         return
 
-    module_dirs = ['NFD/core', 'NFD/daemon', 'ndn-cxx/ndn-cxx', 'apps', 'helper', 'model', 'utils']
+    module_dirs = ['NFD/core', 'NFD/daemon', 'NFD/rib', 'ndn-cxx/ndn-cxx', 'helper', 'model', 'utils', 'apps']
 
     module.source = bld.path.ant_glob(['%s/**/*.cpp' % dir for dir in module_dirs],
                                       excl=['model/ip-faces/*',

@@ -90,6 +90,7 @@ public:
    * \brief Default constructor. Creates an empty stack without forwarding strategy set
    */
   L3Protocol();
+
   virtual ~L3Protocol();
 
   /**
@@ -97,6 +98,12 @@ public:
    */
   void
   initialize();
+
+  /**
+   * \brief Initialize RIB manager
+   */
+  void
+  initializeRibManager();
 
   /**
    * \brief Get smart pointer to nfd::Forwarder installed on the node
@@ -115,7 +122,6 @@ public:
    */
   shared_ptr<nfd::StrategyChoiceManager>
   getStrategyChoiceManager();
-
 
   /**
    * \brief Add face to NDN stack
