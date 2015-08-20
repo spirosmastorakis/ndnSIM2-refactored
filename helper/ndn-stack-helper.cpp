@@ -149,14 +149,7 @@ StackHelper::Install(Ptr<Node> node) const
   }
 
   Ptr<L3Protocol> ndn = m_ndnFactory.Create<L3Protocol>();
-
   ndn->getConfig().put("tables.cs_max_packets", (m_maxCsSize == 0) ? 1 : m_maxCsSize);
-
-  //ndn->setNode(node);
-
-  // NFD initialization
-  // Simulator::ScheduleWithContext(node->GetId(), Seconds(0), &L3Protocol::initialize, this);
-  ndn->initialize();
 
   // Create and aggregate content store if NFD's contest store has been disabled
   if (m_maxCsSize == 0) {
@@ -165,8 +158,6 @@ StackHelper::Install(Ptr<Node> node) const
 
   // Aggregate L3Protocol on node (must be after setting ndnSIM CS)
   node->AggregateObject(ndn);
-
-  Simulator::ScheduleWithContext(node->GetId(), Seconds(0), &L3Protocol::initializeRibManager, ndn);
 
   for (uint32_t index = 0; index < node->GetNDevices(); index++) {
     Ptr<NetDevice> device = node->GetDevice(index);

@@ -160,7 +160,7 @@ private:
   shared_ptr<nfd::StrategyChoiceManager> m_strategyChoiceManager;
   shared_ptr<nfd::StatusServer> m_statusServer;
   shared_ptr<nfd::rib::RibManager> m_ribManager;
-  shared_ptr<::ndn::Face> m_Face;
+  shared_ptr<::ndn::Face> m_face;
 
   nfd::ConfigSection m_config;
 
@@ -184,7 +184,7 @@ L3Protocol::initialize()
   m_impl->m_forwarder = make_shared<nfd::Forwarder>();
 
   initializeManagement();
-  // Simulator::ScheduleWithContext(m_node->GetId(), Seconds(0), &L3Protocol::initializeRib, this);
+  Simulator::ScheduleWithContext(m_node->GetId(), Seconds(0), &L3Protocol::initializeRibManager, this);
 
   m_impl->m_forwarder->getFaceTable().addReserved(make_shared<nfd::NullFace>(), nfd::FACEID_NULL);
 
@@ -216,7 +216,7 @@ private:
 void
 L3Protocol::initializeManagement()
 {
-  auto keyChain = std::ref(StackHelper::getKeyChain());
+  auto& keyChain = StackHelper::getKeyChain();
   auto& forwarder = m_impl->m_forwarder;
   using namespace nfd;
 
@@ -238,14 +238,6 @@ L3Protocol::initializeManagement()
   m_impl->m_statusServer = make_shared<StatusServer>(m_impl->m_internalFace,
                                                      ref(*forwarder),
                                                      keyChain);
-
-  // m_impl->m_Face = make_shared<::ndn::Face>();
-
-  // m_impl->m_ribManager = make_shared<rib::RibManager>(*(m_impl->m_Face), keyChain);
-
-  // m_impl->m_ribManager->registerWithNfd();
-
-  // m_impl->m_ribManager->enableLocalControlHeader();
 
   ConfigFile config((IgnoreSections({"general", "log", "rib"})));
 
@@ -275,14 +267,11 @@ L3Protocol::initializeManagement()
 void
 L3Protocol::initializeRibManager()
 {
-  auto keyChain = std::ref(StackHelper::getKeyChain());
   using namespace nfd;
 
-  m_impl->m_Face = make_shared<::ndn::Face>();
-
-  m_impl->m_ribManager = make_shared<rib::RibManager>(*(m_impl->m_Face), keyChain);
-
-  this->addFace(m_impl->m_Face);
+  m_impl->m_face = make_shared<::ndn::Face>();
+  m_impl->m_ribManager = make_shared<rib::RibManager>(*(m_impl->m_face),
+                                                      StackHelper::getKeyChain());
 
   ConfigFile config([] (const std::string& filename, const std::string& sectionName,
                         const ConfigSection& section, bool isDryRun) {
@@ -348,6 +337,8 @@ L3Protocol::NotifyNewAggregate()
   if (m_node == nullptr) {
     m_node = GetObject<Node>();
     if (m_node != nullptr) {
+      initialize();
+
       NS_ASSERT(m_impl->m_forwarder != nullptr);
       m_impl->m_csFromNdnSim = GetObject<ContentStore>();
       if (m_impl->m_csFromNdnSim != nullptr) {
