@@ -117,7 +117,7 @@ def build(bld):
         export_includes=["../../ns3/ndnSIM"]
     )
 
-    module_dirs = ['NFD/core', 'NFD/daemon']
+    module_dirs = ['NFD/core', 'NFD/daemon', 'NFD/rib']
     bld(features="cxx",
         target="NFD",
         name="NFD",
@@ -130,10 +130,11 @@ def build(bld):
                                        'NFD/daemon/face/tcp*',
                                        'NFD/daemon/face/udp*',
                                        'NFD/daemon/face/unix-stream*',
-                                       'NFD/daemon/face/websocket*']),
+                                       'NFD/daemon/face/websocket*',
+                                       'NFD/rib/nrd.cpp']),
         use=['version-NFD', 'ndn-cxx'],
-        includes=['../..', '../../ns3/ndnSIM/NFD', "./NFD/core", "./NFD/daemon"],
-        export_includes=['../../ns3/ndnSIM/NFD', "./NFD/core", "./NFD/daemon"]
+        includes=['../..', '../../ns3/ndnSIM/NFD', "./NFD/core", "./NFD/daemon", 'NFD/rib'],
+        export_includes=['../../ns3/ndnSIM/NFD', "./NFD/core", "./NFD/daemon", 'NFD/rib']
     )
 
     bld(features="cxx",
@@ -161,7 +162,7 @@ def build(bld):
     module.source = bld.path.ant_glob(['%s/**/*.cpp' % dir for dir in module_dirs],
                                       excl=['model/ip-faces/*'])
 
-    module_dirs = ['NFD/core', 'NFD/daemon', 'apps', 'helper', 'model', 'utils']
+    module_dirs = ['NFD/core', 'NFD/daemon', 'NFD/rib', 'apps', 'helper', 'model', 'utils']
     module.full_headers = bld.path.ant_glob(['%s/**/*.hpp' % dir for dir in module_dirs])
     module.full_headers += bld.path.ant_glob('NFD/common.hpp')
 
