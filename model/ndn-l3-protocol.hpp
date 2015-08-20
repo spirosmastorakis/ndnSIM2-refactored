@@ -94,18 +94,6 @@ public:
   virtual ~L3Protocol();
 
   /**
-   * \brief Initialize NFD instance
-   */
-  void
-  initialize();
-
-  /**
-   * \brief Initialize RIB manager
-   */
-  void
-  initializeRibManager();
-
-  /**
    * \brief Get smart pointer to nfd::Forwarder installed on the node
    */
   shared_ptr<nfd::Forwarder>
@@ -179,7 +167,16 @@ protected:
 
 private:
   void
+  initialize();
+
+  void
   initializeManagement();
+
+  void
+  createInternalFace();
+
+  void
+  initializeRibManager();
 
 private:
   class Impl;

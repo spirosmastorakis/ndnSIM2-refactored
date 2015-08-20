@@ -73,7 +73,7 @@ def configure(conf):
 
     conf.report_optional_feature("ndnSIM", "ndnSIM", True, "")
 
-    conf.write_config_header('../../../src/ndnSIM/ndn-cxx/ndn-cxx/ndn-cxx-config.hpp', define_prefix='NDN_CXX_', remove=False)
+    conf.write_config_header('ndn-cxx/ndn-cxx/ndn-cxx-config.hpp', define_prefix='NDN_CXX_', remove=False)
 
 def build(bld):
     deps = ['core', 'network', 'point-to-point', 'topology-read', 'mobility', 'internet']
@@ -88,7 +88,7 @@ def build(bld):
     module.features += ' ns3fullmoduleheaders'
     module.use += ['BOOST', 'CRYPTOPP', 'SQLITE3', 'RT', 'PTHREAD']
     module.includes = [".", "./NFD", "./NFD/daemon", "./NFD/core", "./NFD/rib", "./ndn-cxx", "./ndn-cxx/ndn-cxx"]
-    module.export_includes = [".", "./NFD", "./NFD/daemon", "./NFD/rib", "./NFD/core", "./ndn-cxx"]
+    module.export_includes = [".", "./NFD", "./NFD/daemon", "./NFD/rib", "./NFD/core", "./ndn-cxx", "./ndn-cxx/ndn-cxx"]
 
     headers = bld (features='ns3header')
     headers.module = 'ndnSIM'
@@ -114,7 +114,10 @@ def build(bld):
                                             'NFD/daemon/face/udp*',
                                             'NFD/daemon/face/unix-stream*',
                                             'NFD/daemon/face/websocket*',
-                                            'ndn-cxx/**/*-osx.cpp'])
+                                            'NFD/rib/nrd.cpp',
+                                            'ndn-cxx/**/*-osx.cpp',
+                                            'ndn-cxx/ndn-cxx/util/dummy-client-face.cpp',
+                                            'ndn-cxx/tests/**/*.cpp'])
 
     module.full_headers = [p.path_from(bld.path) for p in bld.path.ant_glob(
         ['%s/**/*.hpp' % dir for dir in module_dirs])]
