@@ -23,7 +23,81 @@
 #include "ns3/point-to-point-module.h"
 #include "ns3/ndnSIM-module.h"
 
+#include <ndn-cxx/face.hpp>
+
 namespace ns3 {
+namespace ndn {
+
+template<class APP>
+class ApiApp : public Application
+{
+protected:
+  // inherited from Application base class.
+  virtual void
+  StartApplication()
+  {
+    m_impl.reset(new APP);
+  }
+
+  virtual void
+  StopApplication()
+  {
+    m_impl.reset();
+  }
+
+private:
+  std::unique_ptr<APP> m_impl;
+};
+
+
+class TrivialConsumer
+{
+public:
+  TrivialConsumer()
+  {
+    Simulator::Schedule(Seconds(1), &TrivialConsumer::requestData, this);
+    Simulator::Schedule(Seconds(10), &TrivialConsumer::requestData, this);
+  }
+
+private:
+  void
+  requestData()
+  {
+    Interest interest("/hello/world");
+    std::cout << Simulator::Now().ToDouble(Time::S) << " Express Interest " << interest << std::endl;
+    m_face.expressInterest(interest,
+                           [] (const Interest& interest, const Data& data) {
+                             std::cout << Simulator::Now().ToDouble(Time::S) << " GOT DATA: \n" << data << std::endl;
+                           },
+                           [] (const Interest& interest) {
+                             std::cout << Simulator::Now().ToDouble(Time::S) << " Interest timed out" << std::endl;
+                           });
+  }
+
+private:
+  ::ndn::Face m_face;
+};
+
+class TrivialProducer
+{
+public:
+  TrivialProducer()
+    : m_keyChain(StackHelper::getKeyChain())
+  {
+    m_face.setInterestFilter("/hello",
+                             bind([this] (const Interest& interest) {
+                                 std::cout << Simulator::Now().ToDouble(Time::S) << " got interest, returning data" << std::endl;
+                                 auto data = make_shared<Data>(Name(interest.getName()).append("tadaaaaaa"));
+                                 m_keyChain.sign(*data);
+                                 m_face.put(*data);
+                               }, _2),
+                             bind([]{}));
+  }
+
+private:
+  ::ndn::Face m_face;
+  KeyChain& m_keyChain;
+};
 
 /**
  * This scenario simulates a very simple network topology:
@@ -67,25 +141,20 @@ main(int argc, char *argv[])
   p2p.Install(nodes.Get(1), nodes.Get(2));
 
   // Install NDN stack on all nodes
-  ndn::StackHelper ndnHelper;
+  StackHelper ndnHelper;
   ndnHelper.SetDefaultRoutes(true);
   ndnHelper.InstallAll();
 
   // Installing applications
 
   // Consumer
-  ndn::AppHelper consumerHelper("ns3::ndn::ApiApp");
-  consumerHelper.SetPrefix("/prefix");
-  ApplicationContainer app = consumerHelper.Install(nodes.Get (0)); // first node
-  app.Stop(Seconds(15.0));
+  auto consumer = CreateObject<ApiApp<TrivialConsumer>>();
+  nodes.Get(0)->AddApplication(consumer);
+  consumer->SetStopTime(Seconds(15.0));
 
-  // Producer
-  ndn::AppHelper producerHelper("ns3::ndn::Producer");
-  // Producer will reply to all requests starting with /prefix
-  producerHelper.SetPrefix("/");
-  producerHelper.SetAttribute("Postfix", StringValue("/unique/postfix"));
-  producerHelper.SetAttribute("PayloadSize", StringValue("1024"));
-  producerHelper.Install(nodes.Get(2)); // last node
+  auto producer = CreateObject<ApiApp<TrivialProducer>>();
+  nodes.Get(2)->AddApplication(producer);
+  producer->SetStartTime(Seconds(0.5));
 
   Simulator::Stop(Seconds(20.0));
 
@@ -95,10 +164,11 @@ main(int argc, char *argv[])
   return 0;
 }
 
+} // namespace ndn
 } // namespace ns3
 
 int
 main(int argc, char* argv[])
 {
-  return ns3::main(argc, argv);
+  return ns3::ndn::main(argc, argv);
 }
