@@ -14,9 +14,3 @@ def build(bld):
         name = str(i)[:-len(".cpp")]
         obj = bld.create_ns3_program(name, all_modules)
         obj.source = [i] + bld.path.ant_glob(['%s/**/*.cpp' % name])
-
-    obj = bld.create_ns3_program('ndn-simple-api', all_modules)
-    obj.source = [
-        'ndn-simple-api.cpp',
-        'ndn-custom-apps/ndn-api-app.cpp'
-        ]
