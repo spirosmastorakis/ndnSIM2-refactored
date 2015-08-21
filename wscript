@@ -110,6 +110,7 @@ def build(bld):
         name="ndn-cxx",
         source=bld.path.ant_glob('ndn-cxx/src/**/*.cpp',
                                  excl=['ndn-cxx/src/**/*-osx.cpp',
+                                       'ndn-cxx/src/face.cpp', # needs to be compiled as part of ndnSIM module
                                        'ndn-cxx/src/util/dummy-client-face.cpp']),
         use=['version-ndn-cxx', 'BOOST', 'CRYPTOPP', 'SQLITE3', 'RT', 'PTHREAD'],
         includes=['../..', "../../ns3/ndnSIM", "../../ns3/ndnSIM/ndn-cxx"],
@@ -135,10 +136,18 @@ def build(bld):
         export_includes=['../../ns3/ndnSIM/NFD', "./NFD/core", "./NFD/daemon"]
     )
 
+    bld(features="cxx",
+        target="ndn-cxx-face",
+        name="ndn-cxx-face",
+        source='ndn-cxx/src/face.cpp', # needs to be compiled separately,
+        use=['ndn-cxx', 'NFD'],
+        includes=['../..', '../../ns3/ndnSIM', '../../ns3/ndnSIM/NFD', '../../ns3/ndnSIM/ndn-cxx']
+    )
+
     module = bld.create_ns3_module('ndnSIM', deps)
     module.module = 'ndnSIM'
     module.features += ' ns3fullmoduleheaders ndncxxheaders'
-    module.use += ['NFD']
+    module.use += ['NFD', 'ndn-cxx-face']
 
     headers = bld(features='ns3header')
     headers.module = 'ndnSIM'
