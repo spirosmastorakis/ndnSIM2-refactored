@@ -19,6 +19,8 @@
 
 #include "helper/ndn-strategy-choice-helper.hpp"
 
+#include "ns3/ndnSIM/NFD/daemon/fw/strategy.hpp"
+
 #include "../tests-common.hpp"
 
 namespace ns3 {
