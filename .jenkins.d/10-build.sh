@@ -5,6 +5,8 @@ set -e
 JDIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 source "$JDIR"/util.sh
 
+pushd ns-3 >/dev/null
+
 git submodule update --init
 
 # Cleanup
@@ -26,3 +28,5 @@ if has Linux $NODE_LABELS; then
 elif has FreeBSD $NODE_LABELS; then
     sudo ldconfig -a
 fi
+
+popd >/dev/null
