@@ -4,3 +4,6 @@
 [submodule "ndn-cxx"]
 	path = ndn-cxx
 	url = https://github.com/named-data-ndnSIM/ndn-cxx
+[submodule "ndn-tools"]
+	path = ndn-tools
+	url = https://github.com/spirosmastorakis/ndn-tools
