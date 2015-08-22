@@ -162,7 +162,7 @@ private:
   shared_ptr<nfd::StrategyChoiceManager> m_strategyChoiceManager;
   shared_ptr<nfd::StatusServer> m_statusServer;
   shared_ptr<nfd::rib::RibManager> m_ribManager;
-  shared_ptr<::ndn::Face> m_face;
+  shared_ptr< ::ndn::Face> m_face;
 
   nfd::ConfigSection m_config;
 
@@ -271,7 +271,7 @@ L3Protocol::initializeRibManager()
 {
   using namespace nfd;
 
-  m_impl->m_face = make_shared<::ndn::Face>();
+  m_impl->m_face = make_shared< ::ndn::Face>();
   m_impl->m_ribManager = make_shared<rib::RibManager>(*(m_impl->m_face),
                                                       StackHelper::getKeyChain());
 
