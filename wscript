@@ -158,11 +158,19 @@ def build(bld):
         bld.env['MODULES_NOT_BUILT'].append('ndnSIM')
         return
 
-    module_dirs = ['apps', 'helper', 'model', 'utils']
+    module_dirs = ['apps', 'helper', 'model', 'utils', 'ndn-tools']
     module.source = bld.path.ant_glob(['%s/**/*.cpp' % dir for dir in module_dirs],
-                                      excl=['model/ip-faces/*'])
+                                      excl=['model/ip-faces/*',
+                                            'ndn-tools/tests/*',
+                                            'ndn-tools/tools/dissect/*',
+                                            'ndn-tools/tools/dissect-wireshark/*',
+                                            'ndn-tools/tools/dump/*',
+                                            'ndn-tools/tools/peek/*',
+                                            'ndn-tools/tools/pib/*',
+                                            'ndn-tools/tools/ping/client/ndn-ping.cpp',
+                                            'ndn-tools/tools/ping/server/ndn-ping-server.cpp'])
 
-    module_dirs = ['NFD/core', 'NFD/daemon', 'NFD/rib', 'apps', 'helper', 'model', 'utils']
+    module_dirs = ['NFD/core', 'NFD/daemon', 'NFD/rib', 'apps', 'helper', 'model', 'utils', 'ndn-tools']
     module.full_headers = bld.path.ant_glob(['%s/**/*.hpp' % dir for dir in module_dirs])
     module.full_headers += bld.path.ant_glob('NFD/common.hpp')
 
